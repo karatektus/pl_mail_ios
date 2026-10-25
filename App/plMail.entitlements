@@ -14,7 +14,7 @@
 	     the app's container. Must match Widget/PLMailWidget.entitlements. -->
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.de.plmail</string>
+		<string>group.de.pluetzner.plmail</string>
 	</array>
 </dict>
 </plist>

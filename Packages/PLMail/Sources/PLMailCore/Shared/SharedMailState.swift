@@ -43,7 +43,7 @@ public struct SharedMailState: Codable, Equatable, Sendable {
 /// Reads and writes ``SharedMailState`` through the app group.
 public enum SharedMailStore {
     /// Must match the App Groups entitlement in both the app and the widget.
-    public static let suiteName = "group.de.plmail"
+    public static let suiteName = "group.de.pluetzner.plmail"
 
     private static let key = "sharedMailState"
     private static let logger = Logger(subsystem: "de.plmail", category: "shared")

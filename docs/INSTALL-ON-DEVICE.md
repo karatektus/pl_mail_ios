@@ -51,7 +51,7 @@ capability"*.
 
 ## 3. Bundle ids have to be unique to you
 
-`de.plmail` is taken — by this project, on my machine. Free provisioning
+`de.pluetzner.plmail` is taken — it is the App Store id of this project. Free provisioning
 registers the id against your team the first time you build, and two people
 cannot register the same one.
 
@@ -59,10 +59,10 @@ In Xcode, select the **plMail** target → Signing & Capabilities → change the
 Bundle Identifier to something of yours:
 
 ```
-de.plmail.paul
+com.yourname.plmail
 ```
 
-Do the same for the **PLMailWidget** target (`de.plmail.paul.Widget`).
+Do the same for the **PLMailWidget** target (`com.yourname.plmail.Widget`).
 
 ## 4. Turn on Developer Mode on the device
 
