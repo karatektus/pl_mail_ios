@@ -470,7 +470,7 @@ and it is one channel too many.
 build resolves `CODE_SIGN_ENTITLEMENTS = App/plMail-free.entitlements`, which is
 empty on purpose — `App/Config/Signing.xcconfig` does not exist in a fresh clone and
 `Signing.xcconfig.dist` defaults both the app and the widget to the free files. So
-**the App Group `group.de.plmail` is declared in `plMail.entitlements` but is not in
+**the App Group `group.de.pluetzner.plmail` is declared in `plMail.entitlements` but is not in
 the binary anyone is building**, and a personal team cannot put it there: requesting
 App Groups fails signing outright. A Share Extension's only route into the app is
 that group container, so an extension added today would hand over nothing.
@@ -491,7 +491,7 @@ intake.
 2. Confirm on a **device**, not the Simulator, that `SharedMailStore.isShared` is
    true. Until that is true nothing else on this list is testable.
 3. Only then add the `com.apple.share-services` target to `project.pbxproj`, with
-   `group.de.plmail` in its own entitlements, an `NSExtensionActivationRule`, and
+   `group.de.pluetzner.plmail` in its own entitlements, an `NSExtensionActivationRule`, and
    every constraint from the `SharedAttachments.kt` note in
    [02-compose-send.md](02-compose-send.md) — copy the bytes inside the grant, never
    use a supplied name as a path component, refuse by name rather than truncating.

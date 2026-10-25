@@ -4,7 +4,7 @@
 #include? "Signing.xcconfig"
 
 PRODUCT_NAME = plMail
-PRODUCT_BUNDLE_IDENTIFIER = de.plmail
+PRODUCT_BUNDLE_IDENTIFIER = de.pluetzner.plmail
 CURRENT_PROJECT_VERSION = 1
 MARKETING_VERSION = 0.1.0
 

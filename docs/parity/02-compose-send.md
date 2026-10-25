@@ -97,7 +97,7 @@ parity, and ~10 % is iOS ahead.
 | "Saving…/Saved" indicator | `ComposeScreen.kt:471` `SaveState` | **Missing** | Nothing tells the user where their text is. |
 | `ifInState` on draft writes | not used by either | **Missing (both)** | Honoured server-side; the fix for two devices editing one draft. |
 | `mailto:` URL handling | `Mailto.kt`; manifest `VIEW mailto` filter | **Missing** | No URL type registered; `RootView.swift:41` drops URLs when signed in. |
-| Share-sheet intake | `ShareIntake.kt`; manifest `SEND`/`SEND_MULTIPLE` | **Missing** | No Share Extension target. App Group `group.de.plmail` already provisioned. |
+| Share-sheet intake | `ShareIntake.kt`; manifest `SEND`/`SEND_MULTIPLE` | **Missing** | No Share Extension target. App Group `group.de.pluetzner.plmail` already declared. |
 | Shared-file staging, size refusal by name | `SharedAttachments.kt` | **Missing** | Constraints carry over to a Share Extension. |
 | Attachment size ceiling | `SharedAttachments.kt:295` `MAX_BYTES`, size per chip | **Missing** | iOS shows a total only (`ComposeView.swift:352`); nothing refuses a 300 MB video. |
 | Session upload limits honoured | neither reads them | **Missing (both)** | 50 MB upload, 50 MB attachments/email, 4 concurrent uploads. |
@@ -654,7 +654,7 @@ alias silently moves it back to the primary address (`ComposeRepository.kt:181`)
 **Share intake: a Share Extension, not an intent filter.** Add a `com.apple.share-services` target
 with an `NSExtensionActivationRule` accepting text, URLs, images and files. It runs in its own
 process, so Android's expiring-grant problem is replaced by a different one: the extension's
-container is not the app's. The App Group `group.de.plmail` is already provisioned in
+container is not the app's. The App Group `group.de.pluetzner.plmail` is already declared in
 `App/plMail.entitlements` and `Widget/PLMailWidget.entitlements` — write shared items into
 `FileManager.containerURL(forSecurityApplicationGroupIdentifier:)`. Read items with
 `NSItemProvider.loadTransferable(type:)` / `Transferable` rather than type-identifier soup. Every
