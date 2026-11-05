@@ -77,6 +77,11 @@ extension JSONValue {
         return value
     }
 
+    public var arrayValue: [JSONValue]? {
+        guard case .array(let value) = self else { return nil }
+        return value
+    }
+
     /// Re-decodes this value as `T`.
     ///
     /// - Note: Goes through `Data`. See the type's own documentation for why
