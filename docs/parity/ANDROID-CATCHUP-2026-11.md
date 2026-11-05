@@ -48,8 +48,9 @@ then `xcodebuild`) before anyone trusts them.
 
 ## The gap, in the order to do it
 
-Status column: nothing below has been started in code. The only thing committed in this pass is
-this document and the Linux script.
+**Status, 2026-11-05 end of session:** §1 Move to is partly done — see the status line under it.
+Everything else is untouched. **None of the Core/UI code has been compiled** (Linux container);
+build it on a Mac before anything else.
 
 ### 1. Move to — `Thread/set moveTo` (Android 9ff096e, 7dcc1f7, 83deaff)
 
@@ -65,7 +66,16 @@ Spec: CLIENT_DEVELOPMENT.md §"Moving: Thread/set moveTo" (~line 911).
 - Old server: `notUpdated[id].type == "invalidProperties"` naming `moveTo` → fall back to an
   `Email/set` attach-target/detach-view patch, and remember per account for the process lifetime.
   Against such a server refuse moves into/out of Trash/Spam out loud.
-- **iOS work:**
+- **Status:** DONE and tested on Linux — `ThreadSet.Patch.move/.inboxTab`, `ThreadSet.move`,
+  `ThreadSet.refusesMoveTo`, `EmailSet.moveFallback`, `JSONValue.arrayValue`
+  (`Tests/JMAPKitTests/ThreadMoveTests.swift`, 166 JMAPKit tests green). WRITTEN, NOT COMPILED —
+  `MailActions.move(_:to:from:named:)` with undo, per-account fallback memory and the Trash/Spam
+  refusal; `PLMailUI/Labels/MoveToSheet.swift` (recent three, filter past eight); reader More menu
+  entry + `v` shortcut in `ThreadReaderView.swift`; en/de strings. TODO — offline queueing (today
+  an unreachable server rolls back), Core tests with `FakeMailServer`, the selection bar and row
+  context menu entry points in `ThreadListView.swift`, and passing the real view mailbox
+  (the reader sends `fromMailboxId: null`, which only takes the Inbox off).
+- **iOS work (original plan):**
   - `JMAPKit/Methods/ThreadSet.swift`: add `moveTo: MoveTo?` (struct `{mailboxId, fromMailboxId}`,
     encode `fromMailboxId` as explicit null when nil) and `inboxTab: String?` (needed by §3) to
     `Patch`. Keep the `mentionsSnooze` rule — encode each key only when set. Add

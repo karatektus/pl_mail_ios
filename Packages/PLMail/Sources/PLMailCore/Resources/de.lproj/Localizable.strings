@@ -161,6 +161,9 @@
    Zug, die Mail sei verschoben — was sie nicht ist. */
 "waiting for the server" = "warte auf den Server";
 "Put back" = "Zurückgelegt";
+"Moved to %@" = "Verschoben nach %@";
+"The server wouldn't move that conversation." = "Der Server wollte diese Konversation nicht verschieben.";
+"This server is too old to move mail in or out of Trash or Spam." = "Dieser Server ist zu alt, um Mails in den oder aus dem Papierkorb oder Spam zu verschieben.";
 "That server's certificate no longer matches." = "Das Zertifikat dieses Servers passt nicht mehr.";
 "You're offline." = "Du bist offline.";
 "Nothing on %@ answered." = "Auf %@ hat nichts geantwortet.";

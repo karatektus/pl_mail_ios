@@ -64,6 +64,8 @@ public struct ThreadReaderView: View {
     @State private var receipts = ReadReceipts()
     @State private var composing: ComposeModel.Kind?
     @State private var isPickingLabels = false
+    @State private var isMoving = false
+    @State private var didMove = false
     @State private var isPickingSnoozeDate = false
     @State private var find = ThreadFindModel()
     @State private var isFinding = false
@@ -248,6 +250,19 @@ public struct ThreadReaderView: View {
         }
         .sheet(isPresented: $isPickingLabels) {
             LabelPickerView(target: target, sync: sync, actions: actions, store: store)
+        }
+        // From the reader the view is not known, so it is sent as "no view":
+        // the server then takes off the Inbox and nothing else, which is
+        // right from the unified inbox and harmless from a label.
+        .sheet(
+            isPresented: $isMoving,
+            onDismiss: {
+                if didMove { dismiss() }
+            }
+        ) {
+            MoveToSheet(
+                targets: [target], view: nil, sync: sync, actions: actions,
+                onMoved: { didMove = true })
         }
         // Whatever the loader publishes is what gets searched, so a reply that
         // lands mid-search is searched too rather than being the one message
@@ -671,6 +686,14 @@ public struct ThreadReaderView: View {
                 Label(.ui("Labels"), systemImage: "tag")
             }
             .keyboardShortcut("l", modifiers: [])
+
+            Button {
+                didMove = false
+                isMoving = true
+            } label: {
+                Label(.ui("Move to"), systemImage: "folder")
+            }
+            .keyboardShortcut("v", modifiers: [])
 
             Button(action: openFind) {
                 Label(.ui("Find in conversation"), systemImage: "magnifyingglass")

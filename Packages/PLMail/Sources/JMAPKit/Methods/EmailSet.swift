@@ -138,6 +138,22 @@ extension EmailSet {
     ///
     /// Leaves Archive as well when one was added, so undo restores the state
     /// that existed rather than a new one.
+    /// The fallback for a server that predates `Thread/set moveTo`: attach
+    /// the target, detach the view — or the Inbox, from a list with no
+    /// mailbox of its own. **Only for that server**; everywhere else the
+    /// server's own move is the right one, because this patch cannot express
+    /// a provider archive or restore.
+    public static func moveFallback(
+        ids: [EmailID], to target: MailboxID, leaving view: MailboxID,
+        accountID: AccountID
+    ) -> EmailSet {
+        var patch: [String: PatchValue] = [Patch.mailbox(target): .set]
+
+        if view != target { patch[Patch.mailbox(view)] = .remove }
+
+        return self.patch(patch, ids: ids, accountID: accountID)
+    }
+
     public static func moveToInbox(
         ids: [EmailID], inbox: MailboxID, leaving archive: MailboxID? = nil,
         accountID: AccountID

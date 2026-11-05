@@ -41,6 +41,8 @@
 "Key fingerprint" = "Schlüssel-Fingerabdruck";
 "Label %lld selected" = "%lld Ausgewählte beschriften";
 "Labels" = "Labels";
+"Move to" = "Verschieben nach";
+"Recent" = "Zuletzt";
 "Labels you create in plMail's web UI appear here." = "Labels, die du in der plMail-Weboberfläche anlegst, erscheinen hier.";
 "Load" = "Laden";
 "Mark as unread" = "Als ungelesen markieren";

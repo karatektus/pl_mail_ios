@@ -71,3 +71,19 @@ struct ThreadMoveTests {
         #expect(call.arguments.update.count == 2)
     }
 }
+
+@Suite("Move fallback")
+struct MoveFallbackTests {
+    @Test("the fallback attaches the target and detaches the view in one patch")
+    func fallbackPatch() throws {
+        var builder = RequestBuilder()
+        builder.add(
+            EmailSet.moveFallback(
+                ids: [EmailID("5")], to: MailboxID("17"), leaving: MailboxID("1"),
+                accountID: AccountID("7")))
+        let body = String(decoding: try builder.encoded(), as: UTF8.self)
+
+        #expect(body.contains("\"mailboxIds/17\":true"))
+        #expect(body.contains("\"mailboxIds/1\":null"))
+    }
+}

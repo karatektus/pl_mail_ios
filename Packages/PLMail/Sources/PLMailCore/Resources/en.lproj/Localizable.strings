@@ -158,6 +158,9 @@
    has not. */
 "waiting for the server" = "waiting for the server";
 "Put back" = "Put back";
+"Moved to %@" = "Moved to %@";
+"The server wouldn't move that conversation." = "The server wouldn't move that conversation.";
+"This server is too old to move mail in or out of Trash or Spam." = "This server is too old to move mail in or out of Trash or Spam.";
 "That server's certificate no longer matches." = "That server's certificate no longer matches.";
 "You're offline." = "You're offline.";
 "Nothing on %@ answered." = "Nothing on %@ answered.";

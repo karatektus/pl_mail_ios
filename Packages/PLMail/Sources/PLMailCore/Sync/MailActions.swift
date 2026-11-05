@@ -437,6 +437,199 @@ public final class MailActions {
         until == nil ? "Woken" : "Snoozed \(describe(until))"
     }
 
+    /// Files conversations under `destination` and takes them out of the list
+    /// showing `view` — the web's "Move to".
+    ///
+    /// **Carried out by the server**, through `Thread/set moveTo`: it decides
+    /// what comes off, which differs by provider in ways a patch composed here
+    /// cannot express. Only a server that refuses `moveTo` by name gets the
+    /// `Email/set` fallback, and that is remembered per account for the life
+    /// of the process so an upgraded server is noticed on the next launch.
+    ///
+    /// `view` is nil for a list with no mailbox of its own (unified inbox,
+    /// search, Starred, a category tab). Undo is the same move with the two
+    /// swapped.
+    ///
+    /// Not queued offline yet: an unreachable server puts the rows back and
+    /// says so. The queue needs a destination it can re-resolve per account,
+    /// which is planned in `docs/parity/ANDROID-CATCHUP-2026-11.md` §1.
+    public func move(
+        _ targets: [ActionTarget], to destination: MailboxID, from view: MailboxID?,
+        named name: String
+    ) async {
+        guard targets.isEmpty == false else { return }
+
+        failure = nil
+
+        var removed: [RemovedFeedRow] = []
+
+        for target in targets {
+            removed +=
+                (try? await store.removeFromFeeds(
+                    target.threadID, accountKey: target.accountKey)) ?? []
+        }
+
+        let message = String(localized: "Moved to \(name)", bundle: .module)
+
+        offerUndo(message) { [weak self] in
+            guard let self else { return }
+
+            guard let back = view else {
+                // From a list with no mailbox, the way back is the Inbox: that
+                // is the one thing the server took off.
+                for (accountKey, group) in Dictionary(grouping: targets, by: \.accountKey) {
+                    guard
+                        let inbox = try? await store.mailbox(role: .inbox, accountKey: accountKey)
+                    else { continue }
+
+                    _ = await sendMove(group, to: inbox, from: destination)
+                }
+
+                for target in targets { await refetch(target) }
+
+                return
+            }
+
+            _ = await sendMove(targets, to: back, from: destination)
+
+            for target in targets { await refetch(target) }
+        }
+
+        switch await sendMove(targets, to: destination, from: view) {
+        case .accepted:
+            for target in targets { await refetch(target) }
+
+        case .refused:
+            dismissUndo()
+            try? await store.restoreFeedRows(removed)
+
+            for target in targets { await refetch(target) }
+
+        case .unreachable:
+            dismissUndo()
+            try? await store.restoreFeedRows(removed)
+            failure = Self.unreachableMessage
+        }
+    }
+
+    /// Accounts whose server answered that it does not know `moveTo`.
+    private var accountsWithoutMoveTo: Set<String> = []
+
+    /// One `Thread/set` per account, or the `Email/set` fallback where the
+    /// server predates the instruction.
+    private func sendMove(
+        _ targets: [ActionTarget], to destination: MailboxID, from view: MailboxID?
+    ) async -> SendOutcome {
+        var outcome = SendOutcome.accepted
+
+        for (accountKey, group) in Dictionary(grouping: targets, by: \.accountKey) {
+            guard let first = group.first else { continue }
+
+            var result: SendOutcome
+
+            if accountsWithoutMoveTo.contains(accountKey) {
+                result = await sendMoveFallback(group, to: destination, from: view)
+            } else {
+                let request = ThreadSet.move(
+                    group.map { ThreadID($0.threadID) }, to: destination, from: view,
+                    accountID: first.accountID)
+
+                switch await sendMoveInstruction(request) {
+                case .outcome(let sent):
+                    result = sent
+
+                case .unknownToServer:
+                    accountsWithoutMoveTo.insert(accountKey)
+                    result = await sendMoveFallback(group, to: destination, from: view)
+                }
+            }
+
+            if result == .refused { return .refused }
+            if result == .unreachable { outcome = .unreachable }
+        }
+
+        return outcome
+    }
+
+    private enum MoveAnswer {
+        case outcome(SendOutcome)
+        case unknownToServer
+    }
+
+    private func sendMoveInstruction(_ request: ThreadSet) async -> MoveAnswer {
+        do {
+            var builder = RequestBuilder(session: try await client.session())
+            let call = builder.add(request)
+            let results = try await client.send(builder)
+
+            if let error = results.failure(of: call) { throw error }
+
+            let result = try results.result(of: call)
+
+            if let refused = result.notUpdated, refused.isEmpty == false {
+                if refused.values.contains(where: ThreadSet.refusesMoveTo) {
+                    return .unknownToServer
+                }
+
+                failure = String(
+                    localized: "The server wouldn't move that conversation.", bundle: .module)
+                logger.error("Move refused: \(String(describing: refused), privacy: .public)")
+
+                return .outcome(.refused)
+            }
+
+            return .outcome(.accepted)
+        } catch {
+            logger.error("Move failed: \(error, privacy: .public)")
+
+            guard ActionFailure.classify(error).isQueueWorthy else {
+                failure = Self.describe(error)
+
+                return .outcome(.refused)
+            }
+
+            return .outcome(.unreachable)
+        }
+    }
+
+    /// The patch for a server without `moveTo`.
+    ///
+    /// Refuses moves in or out of Trash and Spam out loud: those are provider
+    /// operations, and detaching Trash as though it were a tag is the wrong
+    /// thing done quietly.
+    private func sendMoveFallback(
+        _ group: [ActionTarget], to destination: MailboxID, from view: MailboxID?
+    ) async -> SendOutcome {
+        guard let first = group.first else { return .accepted }
+
+        let accountKey = first.accountKey
+        let trash = try? await store.mailbox(role: .trash, accountKey: accountKey)
+        let junk = try? await store.mailbox(role: .junk, accountKey: accountKey)
+        let bins = [trash, junk].compactMap { $0 }
+
+        if bins.contains(destination) || (view.map { bins.contains($0) } ?? false) {
+            failure = String(
+                localized: "This server is too old to move mail in or out of Trash or Spam.",
+                bundle: .module)
+
+            return .refused
+        }
+
+        var leaving = view
+
+        if leaving == nil {
+            leaving = try? await store.mailbox(role: .inbox, accountKey: accountKey)
+        }
+
+        guard let leaving else { return .refused }
+
+        return await send(
+            EmailSet.moveFallback(
+                ids: group.flatMap(\.emailIDs), to: destination, leaving: leaving,
+                accountID: first.accountID),
+            target: first)
+    }
+
     /// Reports a conversation as spam, or rescues it.
     ///
     /// Both directions are undoable, which matters more here than elsewhere:
