@@ -48,8 +48,9 @@ then `xcodebuild`) before anyone trusts them.
 
 ## The gap, in the order to do it
 
-**Status, 2026-11-05 end of session:** §1 Move to is partly done — see the status line under it.
-Everything else is untouched. **None of the Core/UI code has been compiled** (Linux container);
+**Status, 2026-11-05 end of session:** §1 Move to is partly done, §2 has its wire half, and §5's
+attachment-with-Content-ID fix is done — see the status lines under each. Everything else is
+untouched. **None of the Core/UI code has been compiled** (Linux container);
 build it on a Mac before anything else.
 
 ### 1. Move to — `Thread/set moveTo` (Android 9ff096e, 7dcc1f7, 83deaff)
@@ -100,6 +101,13 @@ Spec: CLIENT_DEVELOPMENT.md §"Moving: Thread/set moveTo" (~line 911).
 Spec: §"Which identity answers a mail" (~line 1041) and "Say which identity a draft is written
 from" (~line 1070).
 
+- **Status:** wire half DONE and tested on Linux — `Email.replyFrom: Identity?`,
+  `EmailGet.composeSourceProperties` (reader set + `replyTo`, `replyFrom`),
+  `MailCapabilities.draftIdentity`, `SessionAccount.keepsDraftIdentity`. TODO — everything in
+  `ComposeModel`: use `composeSourceProperties` in `loadDraftIfNeeded` (~line 709) and wherever a
+  reply/forward source is fetched; turn `replyFrom` into a `SendingIdentity` (add it to
+  `identities` for this message only when its id is not listed) and pass it to
+  `selectIdentity`; send `identityId` on draft saves when `keepsDraftIdentity`.
 - `Email/get` property `replyFrom`: a whole Identity or null. Only returned when asked by name.
   Add it to the property list used for building a reply/forward/reopened draft (not list rows).
   `JMAPKit/Mail/Email.swift` → `replyFrom: Identity?`.
@@ -173,7 +181,8 @@ on the appearance capability (~line 210).
   horizontal padding at 16px; strip `vh/vb/vmin/vmax` (and s/l/d variants) declarations from
   `style` attributes and `<style>` before wrapping (infinite-growth bug). Android commit bodies
   have the measured cases — turn them into tests.
-- **Attachments with a Content-ID:** disposition decides; only a part with no disposition falls
+- **Attachments with a Content-ID:** DONE (`BodyPart.isInline` in `JMAPKit/Mail/Email.swift`,
+  tested). Was: disposition decides; only a part with no disposition falls
   back to `cid != nil` for inline. Check `AttachmentRow`/the part filter.
 - **Mail actions must not send `ifInState`** (Android b3ebcd8). Grep `ifInState` in
   `EmailSet.swift`/`MailActions.swift`; drop it for archive/trash/flags/labels.
