@@ -54,6 +54,15 @@ public struct Email: Hashable, Sendable, Codable {
     /// Keyed by `partId`. Only populated when the request asked for it.
     public var bodyValues: [String: BodyValue]?
 
+    /// Which identity answers this message — a **plMail extension**, and only
+    /// returned when asked for by name, because it carries a signature.
+    ///
+    /// The address the mail was sent to: an alias's identity, or one for an
+    /// address at a catch-all domain that `Identity/get` never lists. On a
+    /// draft, the identity it is written from. Nil, or absent on an older
+    /// server, means "open on the primary identity".
+    public var replyFrom: Identity?
+
     public init(id: EmailID) {
         self.id = id
     }
@@ -68,6 +77,7 @@ public struct Email: Hashable, Sendable, Codable {
         case inReplyTo, references, subject
         case from, sender, to, cc, bcc, replyTo
         case hasAttachment, preview, textBody, htmlBody, attachments, bodyValues
+        case replyFrom
     }
 }
 
@@ -115,8 +125,16 @@ public struct BodyPart: Hashable, Sendable, Codable {
     /// Inline parts have no filename and are referenced from the HTML body by
     /// `cid:`. They must be served into the renderer from a local cache rather
     /// than by handing the download URL to a web view.
+    ///
+    /// **The disposition decides when there is one.** A part marked
+    /// `attachment` that also carries a Content-ID — an invoice PDF from an
+    /// accounting package, a forwarded file — is an attachment; counting it as
+    /// inline hid every attachment such a message had. Only a part with no
+    /// disposition falls back to the `cid`.
     public var isInline: Bool {
-        disposition?.lowercased() == "inline" || cid != nil
+        if let disposition { return disposition.lowercased() == "inline" }
+
+        return cid != nil
     }
 
     private enum CodingKeys: String, CodingKey {

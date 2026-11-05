@@ -285,6 +285,13 @@ extension Session {
 
 /// One connected mail account.
 public struct SessionAccount: Hashable, Sendable, Decodable {
+    /// Whether a draft save may name its `identityId`. False on any server
+    /// that did not say so, which is the safe answer: see
+    /// ``MailCapabilities/draftIdentity``.
+    public var keepsDraftIdentity: Bool {
+        accountCapabilities.mail?.draftIdentity == true
+    }
+
     /// The mail address. Shown to the user wherever accounts are listed.
     public var name: String
     public var isPersonal: Bool
@@ -406,6 +413,10 @@ public struct SessionAccount: Hashable, Sendable, Decodable {
         public var maxSizeAttachmentsPerEmail: Int?
         public var emailQuerySortOptions: [String]?
         public var mayCreateTopLevelMailbox: Bool?
+        /// plMail: the server stores `identityId` on a draft. **Check before
+        /// sending it** — an older server refuses a whole update patch naming
+        /// a property it cannot change, which would lose the text beside it.
+        public var draftIdentity: Bool?
     }
 }
 

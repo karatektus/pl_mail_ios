@@ -87,3 +87,43 @@ struct MoveFallbackTests {
         #expect(body.contains("\"mailboxIds/1\":null"))
     }
 }
+
+@Suite("Reply identity and attachments")
+struct ReplyIdentityTests {
+    @Test("replyFrom decodes as a whole identity, and its absence is nil")
+    func replyFromDecodes() throws {
+        let json = """
+            {"id": "42", "replyFrom": {"id": "addr-eW9Ac2hvcC5leGFtcGxl", "name": "John Smith",
+             "email": "yo@shop.example", "replyTo": null, "bcc": null, "textSignature": "",
+             "htmlSignature": "", "mayDelete": false}}
+            """
+        let email = try JSONDecoder().decode(Email.self, from: Data(json.utf8))
+        let bare = try JSONDecoder().decode(Email.self, from: Data(#"{"id": "43"}"#.utf8))
+
+        #expect(email.replyFrom?.email == "yo@shop.example")
+        #expect(bare.replyFrom == nil)
+    }
+
+    @Test("the compose fetch asks for replyFrom by name, and the reader's does not")
+    func composeAsksForReplyFrom() {
+        #expect(EmailGet.composeSourceProperties.contains("replyFrom"))
+        #expect(EmailGet.readerProperties.contains("replyFrom") == false)
+    }
+
+    @Test("a part marked attachment stays an attachment even with a Content-ID")
+    func dispositionDecides() {
+        var invoice = BodyPart()
+        invoice.disposition = "attachment"
+        invoice.cid = "invoice@acct"
+
+        var bare = BodyPart()
+        bare.cid = "logo@x"
+
+        var inline = BodyPart()
+        inline.disposition = "INLINE"
+
+        #expect(invoice.isInline == false)
+        #expect(bare.isInline)
+        #expect(inline.isInline)
+    }
+}

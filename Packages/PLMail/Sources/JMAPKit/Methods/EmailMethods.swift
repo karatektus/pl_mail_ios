@@ -150,6 +150,12 @@ extension EmailGet {
         "subject", "from", "to", "cc", "bcc", "messageId", "inReplyTo", "references",
         "hasAttachment", "size", "textBody", "htmlBody", "attachments", "bodyValues",
     ]
+
+    /// The reader's set plus who answers it, for the one fetch a reply, a
+    /// forward or a reopened draft is built from. `replyFrom` is never in a
+    /// get without `properties`, and asking on every list row would carry a
+    /// signature per message for nothing.
+    public static let composeSourceProperties = readerProperties + ["replyTo", "replyFrom"]
 }
 
 /// `Email/changes` — the object-level delta.
