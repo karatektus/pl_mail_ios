@@ -13,6 +13,8 @@ categorises, notifies, themes itself from the server, and now has a calendar. It
 went from 171 Swift files / ~30k lines to **300 files / ~65k lines**; plMail for
 Android is 357 Kotlin files / ~81k lines.
 
+**Since superseded in part:** Android moved on after 2026-08-25; the new gap and plan are in [parity/ANDROID-CATCHUP-2026-11.md](parity/ANDROID-CATCHUP-2026-11.md).
+
 The gap analysis it was all built from is in [parity/](parity/) — six audit
 documents, a plan, and [parity/WIRING-TODO.md](parity/WIRING-TODO.md), which is
 the ledger of every seam between agents and the honest record of what was handed
